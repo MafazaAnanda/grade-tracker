@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from grade_tracker.models import MataKuliah, KomponenPenilaian
+from grade_tracker.models import MataKuliah, KomponenPenilaian, Semester
 from grade_tracker.forms import MataKuliahForm, KomponenPenilaianForm
 import datetime
 

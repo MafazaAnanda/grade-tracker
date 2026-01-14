@@ -49,3 +49,11 @@ class KomponenPenilaian(models.Model):
 
     def __str__(self):
         return f" {self.nama} - {self.mata_kuliah}"
+
+class Semester(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    nama = models.CharField(max_length=50)
+    tahun_ajaran = models.CharField(max_length=25)
+
+    def __str__(self):
+        return self.nama

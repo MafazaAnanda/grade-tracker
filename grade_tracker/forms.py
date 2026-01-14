@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from grade_tracker.models import MataKuliah, KomponenPenilaian
+from grade_tracker.models import MataKuliah, KomponenPenilaian, Semester
 from django.utils.html import strip_tags
 
 class MataKuliahForm(ModelForm):
@@ -16,6 +16,14 @@ class KomponenPenilaianForm(ModelForm):
         model = KomponenPenilaian
         fields = ["nama", "persentase"]
     
+    def clean_nama(self):
+        nama = self.cleaned_data["nama"]
+        return strip_tags(nama)
+
+class Semester(ModelForm):
+    class Meta:
+        model = Semester
+        fields = ["nama", "tahun_ajaran"]
     def clean_nama(self):
         nama = self.cleaned_data["nama"]
         return strip_tags(nama)
