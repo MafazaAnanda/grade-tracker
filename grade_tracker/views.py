@@ -2,8 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from grade_tracker.models import MataKuliah, Penilaian
+from grade_tracker.forms import MataKuliahForm, PenilaianForm
 import datetime
 
 def landing_page_view(request):
@@ -48,3 +51,29 @@ def logout_view(request):
     response = HttpResponseRedirect(reverse("grade_tracker:landing_page"))
     response.delete_cookie('last_login')
     return response
+
+@login_required
+def dashboard_view(request):
+    mata_kuliah_list = MataKuliah.objects.filter(user=request.user)
+    penilaian_list = Penilaian.objects.filter(mata_kuliah__user=request.user)
+    
+    context = {
+        'mata_kuliah_list' : mata_kuliah_list,
+        'penilaian_list' : penilaian_list,
+        'last_login' : request.COOKIES.get('last_login', 'Never')
+    }
+
+    return render(request, 'dashboard.html', context)
+
+@login_required
+def create_mata_kuliah_view(request):
+    form = MataKuliahForm(request.POST or None)
+    
+    if form.is_valid() and request.method == "POST":
+        mata_kuliah_entry = form.save(commit=False)
+        mata_kuliah_entry.user = request.user
+        mata_kuliah_entry.save()
+        return redirect('grade_tracker:dashboard')
+    
+    context = {'form' : form}
+    return render(request, 'create_mata_kuliah.html', context)

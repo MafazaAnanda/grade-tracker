@@ -1,5 +1,5 @@
 from django.urls import path
-from grade_tracker.views import landing_page_view, register_view, login_view, logout_view
+from grade_tracker.views import landing_page_view, register_view, login_view, logout_view, dashboard_view, create_mata_kuliah_view
 
 app_name = 'grade_tracker'
 
@@ -8,4 +8,6 @@ urlpatterns = [
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('create-mata-kuliah/', create_mata_kuliah_view, name='create_mata_kuliah')
 ]
