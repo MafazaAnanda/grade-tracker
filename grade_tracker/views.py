@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -53,12 +53,12 @@ def logout_view(request):
     return response
 
 @login_required
-def dashboard_view(request):
-    mata_kuliah_list = MataKuliah.objects.filter(user=request.user)
-    komponen_penilaian_list = KomponenPenilaian.objects.filter(mata_kuliah__user=request.user)
+def dashboard_view(request, mata_kuliah_id):
+    mata_kuliah = get_object_or_404(MataKuliah, id=mata_kuliah_id, user=request.user)
+    komponen_penilaian_list = mata_kuliah.semua_komponen.all()
     
     context = {
-        'mata_kuliah_list' : mata_kuliah_list,
+        'mata_kuliah' : mata_kuliah,
         'komponen_penilaian_list' : komponen_penilaian_list,
         'last_login' : request.COOKIES.get('last_login', 'Never')
     }
@@ -69,7 +69,7 @@ def dashboard_view(request):
 def create_mata_kuliah_view(request):
     form = MataKuliahForm(request.POST or None)
     
-    if form.is_valid() and request.method == "POST":
+    if request.method == "POST" and form.is_valid():
         mata_kuliah_entry = form.save(commit=False)
         mata_kuliah_entry.user = request.user
         mata_kuliah_entry.save()
@@ -80,14 +80,17 @@ def create_mata_kuliah_view(request):
 
 @login_required
 def create_komponen_penilaian_view(request, mata_kuliah_id):
-    mata_kuliah = MataKuliah.objects.get(id=mata_kuliah_id)
+    mata_kuliah = get_object_or_404(MataKuliah, id=mata_kuliah_id, user=request.user)
     form = KomponenPenilaianForm(request.POST or None)
 
-    if form.is_valid() and request.method == "POST":
+    if request.method == "POST" and form.is_valid():
         komponen_penilaian_entry = form.save(commit=False)
         komponen_penilaian_entry.mata_kuliah = mata_kuliah
         komponen_penilaian_entry.save()
         return redirect('grade_tracker:dashboard')
     
-    context = {'form' : form}
+    context = {
+        'form' : form,
+        'mata_kuliah' : mata_kuliah,
+    }
     return render(request, 'create_komponen_penilaian.html', context)
