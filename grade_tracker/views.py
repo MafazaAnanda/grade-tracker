@@ -77,3 +77,17 @@ def create_mata_kuliah_view(request):
     
     context = {'form' : form}
     return render(request, 'create_mata_kuliah.html', context)
+
+@login_required
+def create_komponen_penilaian_view(request, mata_kuliah_id):
+    mata_kuliah = MataKuliah.objects.get(id=mata_kuliah_id)
+    form = KomponenPenilaianForm(request.POST or None)
+
+    if form.is_valid() and request.method == "POST":
+        komponen_penilaian_entry = form.save(commit=False)
+        komponen_penilaian_entry.mata_kuliah = mata_kuliah
+        komponen_penilaian_entry.save()
+        return redirect('grade_tracker:dashboard')
+    
+    context = {'form' : form}
+    return render(request, 'create_komponen_penilaian.html', context)
