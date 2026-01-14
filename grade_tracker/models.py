@@ -25,7 +25,7 @@ class MataKuliah(models.Model):
 
         return round(total, 2)
     
-class Penilaian(models.Model):
+class KomponenPenilaian(models.Model):
     mata_kuliah = models.ForeignKey(
         MataKuliah, 
         related_name="semua_komponen", 

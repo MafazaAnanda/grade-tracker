@@ -5,8 +5,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from grade_tracker.models import MataKuliah, Penilaian
-from grade_tracker.forms import MataKuliahForm, PenilaianForm
+from grade_tracker.models import MataKuliah, KomponenPenilaian
+from grade_tracker.forms import MataKuliahForm, KomponenPenilaianForm
 import datetime
 
 def landing_page_view(request):
@@ -55,11 +55,11 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     mata_kuliah_list = MataKuliah.objects.filter(user=request.user)
-    penilaian_list = Penilaian.objects.filter(mata_kuliah__user=request.user)
+    komponen_penilaian_list = KomponenPenilaian.objects.filter(mata_kuliah__user=request.user)
     
     context = {
         'mata_kuliah_list' : mata_kuliah_list,
-        'penilaian_list' : penilaian_list,
+        'komponen_penilaian_list' : komponen_penilaian_list,
         'last_login' : request.COOKIES.get('last_login', 'Never')
     }
 

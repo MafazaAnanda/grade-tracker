@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import MataKuliah, Penilaian
+from .models import MataKuliah, KomponenPenilaian
 
 admin.site.register(MataKuliah)
-admin.site.register(Penilaian)
+admin.site.register(KomponenPenilaian)
