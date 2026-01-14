@@ -30,12 +30,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            messages.success("Anda Berhasil Login")
+            messages.success(request, "Anda Berhasil Login")
             response = HttpResponseRedirect(reverse("grade_tracker:dashboard"))
             response.set_cookie('last_login', str(datetime.datetime.now()))
             return response
         else:
-            messages.error("Username atau Password Anda Invalid!")
+            messages.error(request, "Username atau Password Anda Invalid!")
         
     else:
         form = AuthenticationForm(request)
