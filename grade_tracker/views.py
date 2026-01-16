@@ -99,7 +99,8 @@ def create_mata_kuliah_view(request):
         if not sks or sks == 0:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Jumlah SKS Tidak Boleh 0!'
+                'code': 'INVALID_INPUT',
+                'message': 'Jumlah SKS Invalid!'
             })
             
         mata_kuliah = MataKuliah.objects.create(
@@ -149,6 +150,7 @@ def edit_mata_kuliah_view(request, mata_kuliah_id):
         data = json.loads(request.body)
 
         mata_kuliah.nama = data.get('nama', mata_kuliah.nama)
+        mata_kuliah.sks = data.get('sks', mata_kuliah.sks)
 
         if not mata_kuliah.nama:
             return JsonResponse({
@@ -157,11 +159,10 @@ def edit_mata_kuliah_view(request, mata_kuliah_id):
                 'message': 'Nama Mata Kuliah Harus Diisi!'
             })
         
-        mata_kuliah.sks = data.get('sks', mata_kuliah.sks)
-
         if not mata_kuliah.sks or mata_kuliah.sks <= 0:
             return JsonResponse({
                 'status': 'error',
+                'code': 'INVALID_INPUT',
                 'message': 'Jumlah SKS Invalid'
             })
 
@@ -217,20 +218,61 @@ def delete_mata_kuliah_view(request, mata_kuliah_id):
             'message': 'Mata Kuliah Gagal Dihapus!'
         }, status=500)
 
+@csrf_exempt
 @login_required
+@require_POST
 def create_komponen_penilaian_view(request, mata_kuliah_id):
-    mata_kuliah = get_object_or_404(MataKuliah, id=mata_kuliah_id, user=request.user)
-    form = KomponenPenilaianForm(request.POST or None)
+    try:
+        mata_kuliah = get_object_or_404(MataKuliah, id=mata_kuliah_id, user=request.user)
 
-    if request.method == "POST" and form.is_valid():
-        komponen_penilaian_entry = form.save(commit=False)
-        komponen_penilaian_entry.mata_kuliah = mata_kuliah
-        komponen_penilaian_entry.save()
-        return redirect('grade_tracker:home')
+        data = json.loads(request.body)
+        nama = data.get('nama')
+        persentase = data.get('persentase')
+
+        if not nama:
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nama Komponen Penilaian Harus Diisi!'
+            })
+        
+        if persentase is None or persentase < 0 or persentase > 100:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Nilai Persentase Harus Antara 0-100!'
+            })
+        
+        komponen_penilaian = KomponenPenilaian.objects.create(
+            mata_kuliah=mata_kuliah,
+            nama=nama,
+            persentase=persentase,
+            nilai=data.get('nilai'),
+            deadline=data.get('deadline'),
+            sudah_selesai=data.get('sudah_selesai')
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Komponen Penilaian Berhasil Ditambahkan!',
+            'data': {
+                'id': komponen_penilaian.id,
+                'nama': komponen_penilaian.nama,
+                'persentase': komponen_penilaian.persentase,
+                'nilai': komponen_penilaian.nilai,
+                'sudah_selesai': komponen_penilaian.sudah_selesai
+            }
+        })
     
-    context = {
-        'form' : form,
-        'mata_kuliah' : mata_kuliah,
-    }
-
-    return render(request, 'create_komponen_penilaian.html', context)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INVALID_JSON',
+            'message': 'Invalid JSON'
+        }, status=400)
+    
+    except Exception:
+        return JsonResponse({
+            'status':'error',
+            'code': 'INTERNAL_SERVER_ERROR',
+            'message': 'Komponen Penilaian Gagal Ditambahkan!'
+        })
