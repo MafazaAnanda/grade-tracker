@@ -37,7 +37,7 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, "Anda Berhasil Login")
-            response = HttpResponseRedirect(reverse("grade_tracker:dashboard"))
+            response = HttpResponseRedirect(reverse("grade_tracker:home"))
             response.set_cookie('last_login', str(datetime.datetime.now()))
             return response
         else:
@@ -56,15 +56,28 @@ def logout_view(request):
     return response
 
 @login_required
-def dashboard_view(request):
+def home_view(request):
     mata_kuliah_list = MataKuliah.objects.filter(user=request.user)
     
     context = {
-        'mata_kuliah' : mata_kuliah_list,
+        'mata_kuliah_list' : mata_kuliah_list,
         'last_login' : request.COOKIES.get('last_login', 'Never')
     }
 
-    return render(request, 'dashboard.html', context)
+    return render(request, 'home.html', context)
+
+@login_required
+def mata_kuliah_details_views(request, mata_kuliah_id):
+    mata_kuliah = get_object_or_404(MataKuliah, pk=mata_kuliah_id, user=request.user)
+    komponen_penilaian_list = KomponenPenilaian.objects.filter(mata_kuliah=mata_kuliah)
+
+    context = {
+        'mata_kuliah': mata_kuliah,
+        'komponen_penilaian_list': komponen_penilaian_list 
+    }
+
+    return render(request, 'mata_kuliah_details.html', context)
+
 
 @csrf_exempt
 @login_required
@@ -213,7 +226,7 @@ def create_komponen_penilaian_view(request, mata_kuliah_id):
         komponen_penilaian_entry = form.save(commit=False)
         komponen_penilaian_entry.mata_kuliah = mata_kuliah
         komponen_penilaian_entry.save()
-        return redirect('grade_tracker:dashboard')
+        return redirect('grade_tracker:home')
     
     context = {
         'form' : form,
