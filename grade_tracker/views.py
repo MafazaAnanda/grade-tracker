@@ -66,18 +66,58 @@ def dashboard_view(request):
 
     return render(request, 'dashboard.html', context)
 
+@csrf_exempt
 @login_required
+@require_POST
 def create_mata_kuliah_view(request):
-    form = MataKuliahForm(request.POST or None)
+    try:
+        data = json.loads(request.body)
+
+        nama = data.get('nama')
+        sks = data.get('sks')
+        
+        if not nama:
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nama Mata Kuliah Harus Diisi!'
+            })
+        
+        if not sks or sks == 0:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Jumlah SKS Tidak Boleh 0!'
+            })
+            
+        mata_kuliah = MataKuliah.objects.create(
+            user=request.user,
+            nama=nama,
+            sks=sks
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Mata Kuliah Berhasil Ditambahkan!',
+            'data': {
+                'id': str(mata_kuliah.id),
+                'nama': mata_kuliah.nama,
+                'sks': mata_kuliah.sks
+            }
+        })
     
-    if request.method == "POST" and form.is_valid():
-        mata_kuliah_entry = form.save(commit=False)
-        mata_kuliah_entry.user = request.user
-        mata_kuliah_entry.save()
-        return redirect('grade_tracker:dashboard')
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INVALID_JSON',
+            'message': 'Invalid JSON'
+        }, status=400)
     
-    context = {'form' : form}
-    return render(request, 'create_mata_kuliah.html', context)
+    except Exception:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INTERNAL_SERVER_ERROR',
+            'message': 'Mata Kuliah Gagal Ditambahkan!'
+        }, status=500)
 
 @csrf_exempt
 @login_required
@@ -89,13 +129,29 @@ def edit_mata_kuliah_view(request, mata_kuliah_id):
         if mata_kuliah.user != request.user:
             return JsonResponse({
                 'status': 'error',
+                'code': 'PERMISSION_DENIED',
                 'message':'Anda Tidak Memiliki Akses untuk Mengedit Mata Kuliah Ini!'
             }, status=403)
         
         data = json.loads(request.body)
 
         mata_kuliah.nama = data.get('nama', mata_kuliah.nama)
+
+        if not mata_kuliah.nama:
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nama Mata Kuliah Harus Diisi!'
+            })
+        
         mata_kuliah.sks = data.get('sks', mata_kuliah.sks)
+
+        if not mata_kuliah.sks or mata_kuliah.sks:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Jumlah SKS Invalid'
+            })
+
         mata_kuliah.save()
 
         return JsonResponse({
@@ -111,15 +167,18 @@ def edit_mata_kuliah_view(request, mata_kuliah_id):
     except json.JSONDecodeError:
         return JsonResponse({
             'status': 'error',
-            'message': 'Invalid'
+            'code': 'INVALID_JSON',
+            'message': 'Format Data Invalid'
         }, status=400)
     
-    except Exception as e:
+    except Exception:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'code': 'INTERNAL_SERVER_ERROR',
+            'message': 'Mata Kuliah Gagal Diedit'
         }, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["DELETE"])
 def delete_mata_kuliah_view(request, mata_kuliah_id):
@@ -129,6 +188,7 @@ def delete_mata_kuliah_view(request, mata_kuliah_id):
         if mata_kuliah.user != request.user:
             return JsonResponse({
                 'status': 'error',
+                'code': 'PERMISSION_DENIED',
                 'message':'Anda Tidak Memiliki Akses untuk Menghapus Mata Kuliah Ini!'
             }, status=403)
         
@@ -137,11 +197,12 @@ def delete_mata_kuliah_view(request, mata_kuliah_id):
             'status': 'success',
             'message': "Mata Kuliah Berhasil Dihapus!"
         })
-    except Exception as e:
+    except Exception:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
-        }, status=400)
+            'code': 'INTERNAL SERVER_ERROR',
+            'message': 'Mata Kuliah Gagal Dihapus!'
+        }, status=500)
 
 @login_required
 def create_komponen_penilaian_view(request, mata_kuliah_id):
