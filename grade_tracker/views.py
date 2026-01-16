@@ -67,7 +67,7 @@ def home_view(request):
     return render(request, 'home.html', context)
 
 @login_required
-def mata_kuliah_details_views(request, mata_kuliah_id):
+def mata_kuliah_details_view(request, mata_kuliah_id):
     mata_kuliah = get_object_or_404(MataKuliah, pk=mata_kuliah_id, user=request.user)
     komponen_penilaian_list = KomponenPenilaian.objects.filter(mata_kuliah=mata_kuliah)
 
@@ -77,7 +77,6 @@ def mata_kuliah_details_views(request, mata_kuliah_id):
     }
 
     return render(request, 'mata_kuliah_details.html', context)
-
 
 @csrf_exempt
 @login_required
@@ -136,7 +135,7 @@ def create_mata_kuliah_view(request):
 @csrf_exempt
 @login_required
 @require_http_methods(["PATCH", "PUT"])
-def edit_mata_kuliah_view(request, mata_kuliah_id):
+def update_mata_kuliah_view(request, mata_kuliah_id):
     try:
         mata_kuliah = get_object_or_404(MataKuliah, pk=mata_kuliah_id)
 
@@ -239,6 +238,7 @@ def create_komponen_penilaian_view(request, mata_kuliah_id):
         if persentase is None or persentase < 0 or persentase > 100:
             return JsonResponse({
                 'status': 'error',
+                'code': 'INVALID_INPUT',
                 'message': 'Nilai Persentase Harus Antara 0-100!'
             })
         
@@ -276,3 +276,75 @@ def create_komponen_penilaian_view(request, mata_kuliah_id):
             'code': 'INTERNAL_SERVER_ERROR',
             'message': 'Komponen Penilaian Gagal Ditambahkan!'
         })
+
+@csrf_exempt
+@login_required
+@require_http_methods(["PATCH", "PUT"])
+def update_komponen_penilaian_view(request, komponen_penilaian_id):
+    try:
+        komponen_penilaian = get_object_or_404(KomponenPenilaian, pk=komponen_penilaian_id)
+        
+        if komponen_penilaian.user != request.user:
+            return JsonResponse({
+                    'status': 'error',
+                    'code': 'PERMISSION_DENIED',
+                    'message':'Anda Tidak Memiliki Akses untuk Mengedit Komponen Penilaian Ini!'
+            }, status=403)
+        
+        data = json.loads(request.body)
+
+        komponen_penilaian.nama = data.get('nama', komponen_penilaian.nama)
+        komponen_penilaian.persentase = data.get('persentase', komponen_penilaian.persentase)
+        komponen_penilaian.nilai = data.get('nilai', komponen_penilaian.nilai)
+        komponen_penilaian.deadline = data.get('deadline', komponen_penilaian.deadline)
+        komponen_penilaian.sudah_selesai = data.get('sudah_selesai', komponen_penilaian.sudah_selesai)
+
+        if not komponen_penilaian.nama:
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nama Komponen Penilaian Harus Diisi!'
+            })
+        
+        if (komponen_penilaian.persentase is None or komponen_penilaian.persentase < 0 
+            or komponen_penilaian.persentase > 100):
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nilai Persentase Harus Antara 0-100!'
+            })
+        
+        if komponen_penilaian.nilai is None or komponen_penilaian.nilai < 0:
+            return JsonResponse({
+                'status': 'error',
+                'code': 'INVALID_INPUT',
+                'message': 'Nilai Tidak Boleh Negatif'
+            })
+        
+        komponen_penilaian.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Komponen Penilaian Berhasil Diedit',
+            'data': {
+                'id': komponen_penilaian.id,
+                'nama': komponen_penilaian.nama,
+                'persentase': komponen_penilaian.persentase,
+                'nilai': komponen_penilaian.nilai,
+                'sudah_selesai': komponen_penilaian.sudah_selesai
+            }
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INVALID_JSON',
+            'message': 'Invalid JSON'
+        }, status=400)
+    
+    except Exception:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INTERNAL_SERVER_ERROR',
+            'message': 'Komponen Penilaian Gagal Diedit'
+        }, status=500)
