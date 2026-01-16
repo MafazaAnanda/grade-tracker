@@ -159,7 +159,7 @@ def edit_mata_kuliah_view(request, mata_kuliah_id):
         
         mata_kuliah.sks = data.get('sks', mata_kuliah.sks)
 
-        if not mata_kuliah.sks or mata_kuliah.sks:
+        if not mata_kuliah.sks or mata_kuliah.sks <= 0:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Jumlah SKS Invalid'
