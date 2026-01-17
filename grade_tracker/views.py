@@ -210,6 +210,7 @@ def delete_mata_kuliah_view(request, mata_kuliah_id):
             'status': 'success',
             'message': "Mata Kuliah Berhasil Dihapus!"
         })
+    
     except Exception:
         return JsonResponse({
             'status': 'error',
@@ -284,7 +285,7 @@ def update_komponen_penilaian_view(request, komponen_penilaian_id):
     try:
         komponen_penilaian = get_object_or_404(KomponenPenilaian, pk=komponen_penilaian_id)
         
-        if komponen_penilaian.user != request.user:
+        if komponen_penilaian.mata_kuliah.user != request.user:
             return JsonResponse({
                     'status': 'error',
                     'code': 'PERMISSION_DENIED',
@@ -341,6 +342,33 @@ def update_komponen_penilaian_view(request, komponen_penilaian_id):
             'code': 'INVALID_JSON',
             'message': 'Invalid JSON'
         }, status=400)
+    
+    except Exception:
+        return JsonResponse({
+            'status': 'error',
+            'code': 'INTERNAL_SERVER_ERROR',
+            'message': 'Komponen Penilaian Gagal Diedit'
+        }, status=500)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["DELETE"])
+def delete_komponen_penilaian_view(request, komponen_penilaian_id):
+    try:
+        komponen_penilaian = get_object_or_404(KomponenPenilaian, pk=komponen_penilaian_id)
+
+        if komponen_penilaian.mata_kuliah.user != request.user:
+            return JsonResponse({
+                    'status': 'error',
+                    'code': 'PERMISSION_DENIED',
+                    'message':'Anda Tidak Memiliki Akses untuk Menghapus Komponen Penilaian Ini!'
+            }, status=403)
+        
+        komponen_penilaian.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': "Komponen Penilaian Berhasil Dihapus!"
+        })
     
     except Exception:
         return JsonResponse({
