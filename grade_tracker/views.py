@@ -166,7 +166,6 @@ def update_mata_kuliah_view(request, mata_kuliah_id):
             })
 
         mata_kuliah.save()
-
         return JsonResponse({
             'status': 'success',
             'message': "Mata Kuliah Berhasil Diedit",
@@ -323,7 +322,6 @@ def update_komponen_penilaian_view(request, komponen_penilaian_id):
             })
         
         komponen_penilaian.save()
-
         return JsonResponse({
             'status': 'success',
             'message': 'Komponen Penilaian Berhasil Diedit',

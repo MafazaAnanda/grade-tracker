@@ -9,16 +9,21 @@ from grade_tracker.views import (
 app_name = 'grade_tracker'
 
 urlpatterns = [
+    # Tampilan
     path('', landing_page_view, name='landing_page'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('home/', home_view, name='home'),
+    path('mata-kuliah<uuid:mata_kuliah_id>/', mata_kuliah_details_view, name='mata_kuliah_details'),
+
+    # Mata Kuliah
     path('create-mata-kuliah/', create_mata_kuliah_view, name='create_mata_kuliah'),
     path('mata-kuliah/<uuid:mata_kuliah_id>/edit/', update_mata_kuliah_view, name='update_mata_kuliah'),
     path('mata-kuliah/<uuid:mata_kuliah_id>delete/', delete_mata_kuliah_view, name='delete_mata_kuliah'),
-    path('mata-kuliah/<uuid:mata_kuliah_id>/create-komponen-penilaian', create_komponen_penilaian_view, name='create_komponen_penilaian'),
-    path('komponen/<int:komponen_penilaian_id>/edit', update_komponen_penilaian_view, name='update_komponen_penilaian'),
-    path('komponen/<int:komponen__penilaian_id>/delete', delete_komponen_penilaian_view, name='delete_komponen_penilaian'),
-    path('mata-kuliah<uuid:mata_kuliah_id>/', mata_kuliah_details_view, name='mata_kuliah_details'),
+
+    #Komponen Penilaian
+    path('mata-kuliah/<uuid:mata_kuliah_id>/create-komponen-penilaian/', create_komponen_penilaian_view, name='create_komponen_penilaian'),
+    path('komponen/<int:komponen_penilaian_id>/edit/', update_komponen_penilaian_view, name='update_komponen_penilaian'),
+    path('komponen/<int:komponen_penilaian_id>/delete/', delete_komponen_penilaian_view, name='delete_komponen_penilaian'),
 ]
